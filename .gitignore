@@ -4,3 +4,4 @@ __pycache__/
 artifacts/
 data/
 .DS_Store
+.pio
