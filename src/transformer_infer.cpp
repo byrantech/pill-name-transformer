@@ -28,9 +28,12 @@ void layer_norm(const float* x, const float* gamma, const float* beta, int n, fl
 
 void linear(const float* x, int in_dim, const float* w_rowmajor, const float* b, int out_dim, float* y) {
   for (int o = 0; o < out_dim; ++o) {
+    const float* __restrict__ row = w_rowmajor + o * in_dim;
     float s = b ? b[o] : 0.f;
-    const float* row = w_rowmajor + o * in_dim;
-    for (int i = 0; i < in_dim; ++i) s += x[i] * row[i];
+#pragma GCC unroll 8
+    for (int i = 0; i < in_dim; ++i) {
+      s += x[i] * row[i];
+    }
     y[o] = s;
   }
 }
@@ -59,6 +62,7 @@ void run_encoder_layer(
   const int H = mw::kNumHeads;
   const int Dh = D / H;
   const int THREE_D = 3 * D;
+  const float inv_sqrt_dh = 1.f / sqrtf(static_cast<float>(Dh));
 
   for (int l = 0; l < L; ++l) layer_norm(g_x + l * D, norm1_w, norm1_b, D, g_tmp + l * D);
 
@@ -73,12 +77,13 @@ void run_encoder_layer(
       float maxv = -1e30f;
       for (int j = 0; j < L; ++j) {
         float s = 0.f;
+#pragma GCC unroll 16
         for (int d = 0; d < Dh; ++d) {
-          float qv = g_qkv[i * THREE_D + h * Dh + d];
-          float kv = g_qkv[j * THREE_D + D + h * Dh + d];
+          const float qv = g_qkv[i * THREE_D + h * Dh + d];
+          const float kv = g_qkv[j * THREE_D + D + h * Dh + d];
           s += qv * kv;
         }
-        s /= sqrtf(static_cast<float>(Dh));
+        s *= inv_sqrt_dh;
         if (j > i) s = mw::kAttnMask;
         scores[j] = s;
         if (s > maxv) maxv = s;

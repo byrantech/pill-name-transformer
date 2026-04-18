@@ -47,16 +47,16 @@ python export_c_header.py
 
 This produces `artifacts/model_export.h`. It is a bridge format: you can start firmware integration quickly, then switch to quantized weights (`int8`/`int16`) once your runtime is stable.
 
-### On-device inference (no TFLite; reference C++ forward)
+### On-device inference (ESP32-S3 + ST7789)
 
-The repo firmware loads real weights from `include/model_weights_generated.h`, produced by:
+Firmware loads weights from `include/model_weights_generated.h`, produced by:
 
 ```bash
 source .venv/bin/activate
 python transformer/export_esp32_weights.py
 ```
 
-Then build/upload the PlatformIO project at the repo root (`platformio.ini`). Serial: send a line ending with newline to generate; optional prefix `p myprefix` seeds the prompt.
+Then from the repo root: `pio run -t upload` (default env `esp32-s3-lcd-1-3`). The board shows a parody RX label; **shake** the device to run the transformer and refresh the name, quantity, SIG, and barcode.
 
 ## Notes for ESP32-S3 deployment
 
