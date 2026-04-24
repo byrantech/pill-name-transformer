@@ -484,7 +484,8 @@ void setup() {
 
   backlight_on();
   tft.init();
-  tft.setRotation(0);
+  /* 2 = 180° — use when the panel is mounted upside down. */
+  tft.setRotation(2);
 
   const uint16_t boot_paper = panel_rgb(252, 250, 247);
   const uint16_t boot_red = panel_rgb(227, 24, 55);
